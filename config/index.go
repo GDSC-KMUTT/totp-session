@@ -9,7 +9,7 @@ import (
 var C = new(config)
 
 func init() {
-	yml, err := ioutil.ReadFile("config.yml")
+	yml, err := ioutil.ReadFile("config.yaml")
 	if err != nil {
 		panic(err)
 	}

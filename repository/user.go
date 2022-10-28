@@ -1,15 +1,14 @@
 package repository
 
-import "go.mongodb.org/mongo-driver/bson/primitive"
-
 type User struct {
-	Id       primitive.ObjectID `json:"id" bson:"_id"`
-	Email    string             `json:"email" bson:"email"`
-	Password string             `json:"password" bson:"password"`
-	Secret   string             `json:"secret" bson:"secret"`
+	Id       int64  `json:"id"`
+	Email    string `json:"email"`
+	Password string `json:"password"`
+	Secret   string `json:"secret"`
 }
 
 type UserRepository interface {
-	CreateUser(email string, password string, secret string) (*User, *string, error)
+	CreateUser(email string, password string, secret string) (*User, error)
 	CheckUser(email string) (*User, error)
+	GetUsers() ([]*User, error)
 }

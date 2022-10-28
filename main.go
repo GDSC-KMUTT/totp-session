@@ -2,7 +2,6 @@ package main
 
 import (
 	"database/sql"
-	"encoding/json"
 	"net/http"
 	"time"
 
@@ -10,6 +9,7 @@ import (
 	"github.com/GDSC-KMUTT/totp-session/handler"
 	"github.com/GDSC-KMUTT/totp-session/repository"
 	"github.com/GDSC-KMUTT/totp-session/service"
+	_ "github.com/go-sql-driver/mysql"
 )
 
 func main() {
@@ -19,14 +19,6 @@ func main() {
 		WriteTimeout:   10 * time.Second,
 		MaxHeaderBytes: 1 << 20,
 	}
-
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		response, err := json.Marshal(map[string]string{"hello": "world"})
-		if err != nil {
-			panic(err)
-		}
-		w.Write(response)
-	})
 
 	db, err := sql.Open("mysql", config.C.DB_HOST)
 	if err != nil {
@@ -38,8 +30,11 @@ func main() {
 
 	http.HandleFunc("/signup", userHandler.SignUp)
 	http.HandleFunc("/signin", userHandler.SignIn)
+	http.HandleFunc("/", userHandler.ListUsers)
 
 	if err := s.ListenAndServe(); err != nil {
 		panic(err)
 	}
+
+	defer db.Close()
 }

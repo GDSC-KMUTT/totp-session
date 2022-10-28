@@ -1,13 +1,12 @@
 package service
 
-import "go.mongodb.org/mongo-driver/bson/primitive"
-
 type User struct {
-	Id    primitive.ObjectID `json:"id" bson:"_id"`
-	Email string             `json:"email"`
+	Id    int64  `json:"id" bson:"_id"`
+	Email string `json:"email"`
 }
 
 type UserService interface {
-	SignUp(email string, password string) (*string, error)
+	SignUp(email string, password string) (*string, *string, error)
 	SignIn(email string, password string) (*UserService, error)
+	ListUsers() ([]*User, error)
 }
