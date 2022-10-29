@@ -19,6 +19,11 @@ func NewUserHandler(userSerivice service.UserService) userHandler {
 }
 
 func (h userHandler) SignUp(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "POST" {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
 	var response []byte
 	var body types.SignIn
 	err := utils.Parse(r, &body)
@@ -42,10 +47,20 @@ func (h userHandler) SignUp(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h userHandler) SignIn(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "POST" {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
 	fmt.Fprint(w, r.Body)
 }
 
 func (h userHandler) ListUsers(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "GET" {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
 	users, err := h.service.ListUsers()
 	if err != nil {
 		panic(err.Error())
