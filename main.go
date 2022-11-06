@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+	"encoding/json"
 	"net/http"
 	"time"
 
@@ -28,9 +29,14 @@ func main() {
 	userService := service.NewUserService(userRepository)
 	userHandler := handler.NewUserHandler(userService)
 
+	http.HandleFunc("/", (func(w http.ResponseWriter, r *http.Request) {
+		response_value := map[string]any{"Message": "Hello, World"}
+		response, _ := json.Marshal(response_value)
+		w.Write(response)
+	}))
 	http.HandleFunc("/signup", userHandler.SignUp)
 	http.HandleFunc("/signin", userHandler.SignIn)
-	http.HandleFunc("/", userHandler.ListUsers)
+	http.HandleFunc("/list", userHandler.ListUsers)
 
 	if err := s.ListenAndServe(); err != nil {
 		panic(err)
