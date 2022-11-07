@@ -10,6 +10,7 @@ import (
 	"github.com/GDSC-KMUTT/totp-session/repository"
 	"github.com/golang-jwt/jwt"
 	"github.com/pquerna/otp/totp"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type userService struct {
@@ -29,7 +30,12 @@ func (s userService) SignUp(email string, password string) (*string, *string, er
 		return nil, nil, err
 	}
 	secret := key.Secret()
-	user, err := s.repository.CreateUser(email, password, secret)
+	hashedPwd, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	user, err := s.repository.CreateUser(email, string(hashedPwd), secret)
 	if err != nil {
 		return nil, nil, err
 	}
