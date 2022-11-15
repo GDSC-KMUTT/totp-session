@@ -22,6 +22,7 @@ func NewUserService(userRepository repository.UserRepository) userService {
 }
 
 func (s userService) SignUp(email string, password string) (*string, *string, error) {
+	// Generate a new secret TOTP key
 	key, err := totp.Generate(totp.GenerateOpts{
 		Issuer:      "GDSC KMUTT",
 		AccountName: email,
@@ -30,15 +31,20 @@ func (s userService) SignUp(email string, password string) (*string, *string, er
 		return nil, nil, err
 	}
 	secret := key.Secret()
+
+	// Hash the password
 	hashedPwd, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
 		return nil, nil, err
 	}
 
+	// Create a new user
 	user, err := s.repository.CreateUser(email, string(hashedPwd), secret)
 	if err != nil {
 		return nil, nil, err
 	}
+
+	// Create a new JWT claims
 	claims := jwt.MapClaims{
 		"id":  user.Id,
 		"exp": time.Now().Add(time.Hour * 72).Unix(),
@@ -58,6 +64,7 @@ func (s userService) SignUp(email string, password string) (*string, *string, er
 		return nil, nil, err
 	}
 	base64string := "data:image/png;base64," + base64.StdEncoding.EncodeToString(buf.Bytes())
+
 	return &tokenString, &base64string, nil
 }
 

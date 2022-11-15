@@ -19,30 +19,32 @@ func NewUserHandler(userSerivice service.UserService) userHandler {
 }
 
 func (h userHandler) SignUp(w http.ResponseWriter, r *http.Request) {
+	// Check if the request method is POST
 	if r.Method != "POST" {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		return
 	}
+
+	// Set the response header to application/json
 	w.Header().Set("Content-Type", "application/json")
 	var response []byte
 	var body types.SignIn
 	err := utils.Parse(r, &body)
 	if err != nil {
-		response_value := map[string]any{"success": false, "error": err.Error()}
-		response, _ := json.Marshal(response_value)
-		w.Write(response)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
+	// Call signup service
 	token, base64, err := h.service.SignUp(body.Email, body.Password)
 	if err != nil {
-		response_value := map[string]any{"success": false, "error": err.Error()}
-		response, _ := json.Marshal(response_value)
-		w.Write(response)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+
+	// Create a response
 	response, _ = json.Marshal(map[string]any{"success": true, "token": token, "image": base64})
-	w.Write(response)
+	fmt.Fprint(w, response)
 	return
 }
 
@@ -69,5 +71,5 @@ func (h userHandler) ListUsers(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		panic(err)
 	}
-	w.Write(response)
+	fmt.Fprint(w, response)
 }

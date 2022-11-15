@@ -13,18 +13,20 @@ func NewRepositoryDB(db *sql.DB) userRepositoryDB {
 }
 
 func (u userRepositoryDB) CreateUser(email string, password string, secret string) (*User, error) {
+	// Insert document into database
 	insert, err := u.db.Exec("INSERT INTO users (email, password, secret) VALUES (?, ?, ?)", email, password, secret)
 	if err != nil {
 		return nil, err
 	}
 	userId, err := insert.LastInsertId()
+
+	// Create user object
 	var user = User{
 		Id:       userId,
 		Email:    email,
 		Password: password,
 		Secret:   secret,
 	}
-
 	return &user, nil
 }
 func (u userRepositoryDB) CheckUser(email string) (*User, error) {
