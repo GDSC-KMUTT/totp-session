@@ -124,14 +124,30 @@ func main() {
 		w.Write(response)
 	}))
 
-	http.HandleFunc("/signup", userHandler.SignUp)
-	http.HandleFunc("/signin", userHandler.SignIn)
-	http.HandleFunc("/confirm-otp", userHandler.ConfirmOtp)
-	http.HandleFunc("/get-user", userHandler.GetProfile)
+	http.HandleFunc("/signup", CORS(userHandler.SignUp))
+	http.HandleFunc("/signin", CORS(userHandler.SignIn))
+	http.HandleFunc("/confirm-otp", CORS(userHandler.ConfirmOtp))
+	http.HandleFunc("/get-user", CORS(userHandler.GetProfile))
 
 	if err := s.ListenAndServe(); err != nil {
 		panic(err)
 	}
 
 	defer db.Close()
+}
+
+func CORS(next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Add("Access-Control-Allow-Origin", "http://127.0.0.1:3000")
+		w.Header().Add("Access-Control-Allow-Credentials", "true")
+		w.Header().Add("Access-Control-Allow-Headers", "Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, accept, origin, Cache-Control, X-Requested-With")
+		w.Header().Add("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
+
+		if r.Method == "OPTIONS" {
+			http.Error(w, "No Content", http.StatusNoContent)
+			return
+		}
+
+		next(w, r)
+	}
 }

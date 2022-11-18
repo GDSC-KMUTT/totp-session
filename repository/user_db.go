@@ -35,9 +35,7 @@ func (u userRepositoryDB) CheckUser(email string) (*User, error) {
 		return nil, err
 	}
 	var user User
-
 	for result.Next() {
-
 		if err := result.Scan(&user.Id, &user.Email, &user.Password, &user.Secret); err != nil {
 			return nil, err
 		}
@@ -54,7 +52,6 @@ func (u userRepositoryDB) GetUser(id int64) (*User, error) {
 	}
 	var user User
 	for result.Next() {
-
 		if err := result.Scan(&user.Id, &user.Email, &user.Password, &user.Secret); err != nil {
 			return nil, err
 		}

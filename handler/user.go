@@ -28,7 +28,6 @@ func (h userHandler) SignUp(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Set the response header to application/json
-	w.Header().Set("Content-Type", "application/json")
 	var body types.SignIn
 	err := utils.Parse(r, &body)
 	var response []byte
@@ -50,6 +49,7 @@ func (h userHandler) SignUp(w http.ResponseWriter, r *http.Request) {
 
 	// Create a response
 	response, _ = json.Marshal(map[string]any{"success": true, "id": id, "image": base64, "secret": secret})
+	w.WriteHeader(http.StatusOK)
 	w.Write(response)
 	return
 }
@@ -59,7 +59,6 @@ func (h userHandler) SignIn(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		return
 	}
-	w.Header().Set("Content-Type", "application/json")
 	var body types.SignIn
 	var response []byte
 	err := utils.Parse(r, &body)
@@ -77,6 +76,8 @@ func (h userHandler) SignIn(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	response, _ = json.Marshal(map[string]any{"success": true, "id": id})
+
+	w.WriteHeader(http.StatusOK)
 	w.Write(response)
 	return
 }
@@ -91,22 +92,20 @@ func (h userHandler) GetProfile(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		return
 	}
-	w.Header().Set("Content-Type", "application/json")
 	bearer := r.Header.Get("Authorization")
 	jwtToken := strings.Split(bearer, " ")
 	token, err := jwt.ParseWithClaims(jwtToken[1], &CustomClaims{}, func(token *jwt.Token) (interface{}, error) {
 		return []byte(config.C.JWT_SECRET), nil
 	})
-	claims, ok := token.Claims.(*CustomClaims)
 	var response []byte
-	if !ok && !token.Valid {
+	if !token.Valid {
 		response, _ = json.Marshal(map[string]any{"success": false, "error": err.Error()})
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write(response)
 		return
 	}
-
-	if !token.Valid {
+	claims, ok := token.Claims.(*CustomClaims)
+	if !ok && !token.Valid {
 		response, _ = json.Marshal(map[string]any{"success": false, "error": err.Error()})
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write(response)
@@ -120,7 +119,8 @@ func (h userHandler) GetProfile(w http.ResponseWriter, r *http.Request) {
 		w.Write(response)
 		return
 	}
-	response, _ = json.Marshal(map[string]any{"user": user})
+	response, _ = json.Marshal(map[string]any{"success": true, "email": user.Email})
+	w.WriteHeader(http.StatusOK)
 	w.Write(response)
 	return
 }
@@ -130,7 +130,6 @@ func (h userHandler) ConfirmOtp(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		return
 	}
-	w.Header().Set("Content-Type", "application/json")
 	var body types.ConfirmSignUp
 	err := utils.Parse(r, &body)
 	var response []byte
@@ -149,5 +148,7 @@ func (h userHandler) ConfirmOtp(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response, _ = json.Marshal(map[string]any{"success": true, "token": &token})
+	w.WriteHeader(http.StatusOK)
 	w.Write(response)
+	return
 }
