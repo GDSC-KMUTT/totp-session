@@ -87,7 +87,6 @@ func (s userService) ConfirmOtp(id int64, otp string) (*string, error) {
 	if err != nil {
 		return nil, err
 	}
-	print(id)
 
 	// Verify the OTP
 	valid := totp.Validate(otp, user.Secret)
