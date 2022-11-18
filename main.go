@@ -5,7 +5,6 @@ import (
 	"database/sql"
 	"encoding/base64"
 	"encoding/json"
-	"fmt"
 	"image/png"
 	"net/http"
 	"time"
@@ -17,7 +16,6 @@ import (
 	"github.com/GDSC-KMUTT/totp-session/types"
 	"github.com/GDSC-KMUTT/totp-session/utils"
 	_ "github.com/go-sql-driver/mysql"
-	"github.com/golang-jwt/jwt"
 	"github.com/pquerna/otp/totp"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -53,7 +51,9 @@ func main() {
 		var body types.SignUp
 		err := utils.Parse(r, &body)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
+			response, _ = json.Marshal(map[string]any{"success": false, "error": err.Error()})
+			w.WriteHeader(http.StatusBadRequest)
+			w.Write(response)
 			return
 		}
 
@@ -63,7 +63,9 @@ func main() {
 			AccountName: body.Email,
 		})
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			response, _ = json.Marshal(map[string]any{"success": false, "error": err.Error()})
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write(response)
 			return
 		}
 		secret := key.Secret()
@@ -71,33 +73,25 @@ func main() {
 		// Hash the password
 		hashedPwd, err := bcrypt.GenerateFromPassword([]byte(body.Password), bcrypt.DefaultCost)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			response, _ = json.Marshal(map[string]any{"success": false, "error": err.Error()})
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write(response)
 			return
 		}
 
 		// Create a new user
 		insert, err := db.Exec("INSERT INTO users (email, password, secret) VALUES (?, ?, ?)", body.Email, hashedPwd, secret)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			response, _ = json.Marshal(map[string]any{"success": false, "error": err.Error()})
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write(response)
 			return
 		}
 		userId, err := insert.LastInsertId()
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-
-		// Create a new JWT claims
-		claims := jwt.MapClaims{
-			"id":  userId,
-			"exp": time.Now().Add(time.Hour * 72).Unix(),
-		}
-
-		// Create JWT token
-		token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-		tokenString, err := token.SignedString([]byte(config.C.JWT_SECRET))
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			response, _ = json.Marshal(map[string]any{"success": false, "error": err.Error()})
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write(response)
 			return
 		}
 
@@ -105,22 +99,29 @@ func main() {
 		var buf bytes.Buffer
 		img, err := key.Image(200, 200)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			response, _ = json.Marshal(map[string]any{"success": false, "error": err.Error()})
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write(response)
 			return
 		}
 		if err := png.Encode(&buf, img); err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			response, _ = json.Marshal(map[string]any{"success": false, "error": err.Error()})
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write(response)
 			return
 		}
 		base64string := "data:image/png;base64," + base64.StdEncoding.EncodeToString(buf.Bytes())
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			response, _ = json.Marshal(map[string]any{"success": false, "error": err.Error()})
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write(response)
 			return
 		}
+		url := key.URL()
 
 		// Create a response
-		response, _ = json.Marshal(map[string]any{"success": true, "token": tokenString, "image": base64string})
-		fmt.Fprint(w, response)
+		response, _ = json.Marshal(map[string]any{"success": true, "id": userId, "image": base64string, "secret": url})
+		w.Write(response)
 	}))
 
 	http.HandleFunc("/signup", userHandler.SignUp)

@@ -31,20 +31,25 @@ func (h userHandler) SignUp(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	var body types.SignIn
 	err := utils.Parse(r, &body)
+	var response []byte
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		response, _ = json.Marshal(map[string]any{"success": false, "error": err.Error()})
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write(response)
 		return
 	}
 
 	// Call signup service
 	id, base64, secret, err := h.service.SignUp(body.Email, body.Password)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		response, _ = json.Marshal(map[string]any{"success": false, "error": err.Error()})
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write(response)
 		return
 	}
 
 	// Create a response
-	response, _ := json.Marshal(map[string]any{"success": true, "id": id, "image": base64, "secret": secret})
+	response, _ = json.Marshal(map[string]any{"success": true, "id": id, "image": base64, "secret": secret})
 	w.Write(response)
 	return
 }
@@ -56,17 +61,22 @@ func (h userHandler) SignIn(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Content-Type", "application/json")
 	var body types.SignIn
+	var response []byte
 	err := utils.Parse(r, &body)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		response, _ = json.Marshal(map[string]any{"success": false, "error": err.Error()})
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write(response)
 		return
 	}
 	id, err := h.service.SignIn(body.Email, body.Password)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		response, _ = json.Marshal(map[string]any{"success": false, "error": err.Error()})
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write(response)
 		return
 	}
-	response, _ := json.Marshal(map[string]any{"success": true, "id": id})
+	response, _ = json.Marshal(map[string]any{"success": true, "id": id})
 	w.Write(response)
 	return
 }
@@ -88,26 +98,29 @@ func (h userHandler) GetProfile(w http.ResponseWriter, r *http.Request) {
 		return []byte(config.C.JWT_SECRET), nil
 	})
 	claims, ok := token.Claims.(*CustomClaims)
+	var response []byte
 	if !ok && !token.Valid {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		response, _ = json.Marshal(map[string]any{"success": false, "error": err.Error()})
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write(response)
 		return
 	}
 
 	if !token.Valid {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		response, _ = json.Marshal(map[string]any{"success": false, "error": err.Error()})
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write(response)
 		return
 	}
 
 	user, err := h.service.GetUser(claims.Id)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		response, _ = json.Marshal(map[string]any{"success": false, "error": err.Error()})
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write(response)
 		return
 	}
-	response, err := json.Marshal(map[string]any{"user": user})
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
+	response, _ = json.Marshal(map[string]any{"user": user})
 	w.Write(response)
 	return
 }
@@ -120,16 +133,21 @@ func (h userHandler) ConfirmOtp(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	var body types.ConfirmSignUp
 	err := utils.Parse(r, &body)
+	var response []byte
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		response, _ = json.Marshal(map[string]any{"success": false, "error": err.Error()})
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write(response)
 		return
 	}
 	token, err := h.service.ConfirmOtp(body.Id, body.Otp)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		response, _ = json.Marshal(map[string]any{"success": false, "error": err.Error()})
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write(response)
 		return
 	}
 
-	response, _ := json.Marshal(map[string]any{"success": true, "token": &token})
+	response, _ = json.Marshal(map[string]any{"success": true, "token": &token})
 	w.Write(response)
 }
