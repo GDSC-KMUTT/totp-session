@@ -10,5 +10,5 @@ type User struct {
 type UserRepository interface {
 	CreateUser(email string, password string, secret string) (*User, error)
 	CheckUser(email string) (*User, error)
-	GetUsers() ([]*User, error)
+	GetUser(id int64) (*User, error)
 }

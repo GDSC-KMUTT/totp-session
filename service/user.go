@@ -6,7 +6,8 @@ type User struct {
 }
 
 type UserService interface {
-	SignUp(email string, password string) (*string, *string, error)
-	SignIn(email string, password string) (*UserService, error)
-	ListUsers() ([]*User, error)
+	SignUp(email string, password string) (*int64, *string, *string, error)
+	SignIn(email string, password string) (*int64, error)
+	GetUser(id int64) (*User, error)
+	ConfirmOtp(id int64, otp string) (*string, error)
 }

@@ -50,7 +50,7 @@ func main() {
 
 		// Declare a variable to store the body of the request
 		var response []byte
-		var body types.SignIn
+		var body types.SignUp
 		err := utils.Parse(r, &body)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
@@ -125,7 +125,8 @@ func main() {
 
 	http.HandleFunc("/signup", userHandler.SignUp)
 	http.HandleFunc("/signin", userHandler.SignIn)
-	http.HandleFunc("/list", userHandler.ListUsers)
+	http.HandleFunc("/confirm-otp", userHandler.ConfirmOtp)
+	http.HandleFunc("/get-user", userHandler.GetProfile)
 
 	if err := s.ListenAndServe(); err != nil {
 		panic(err)

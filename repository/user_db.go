@@ -30,24 +30,36 @@ func (u userRepositoryDB) CreateUser(email string, password string, secret strin
 	return &user, nil
 }
 func (u userRepositoryDB) CheckUser(email string) (*User, error) {
-	return nil, nil
-}
-
-func (u userRepositoryDB) GetUsers() ([]*User, error) {
-	result, err := u.db.Query("SELECT * FROM users")
+	result, err := u.db.Query("SELECT id, email, password, secret FROM users WHERE email = ?", email)
 	if err != nil {
 		return nil, err
 	}
-	var users []*User
+	var user User
+
 	for result.Next() {
-		var user User
 
 		if err := result.Scan(&user.Id, &user.Email, &user.Password, &user.Secret); err != nil {
 			return nil, err
 		}
-
-		users = append(users, &user)
 	}
 	defer result.Close()
-	return users, nil
+
+	return &user, nil
+}
+
+func (u userRepositoryDB) GetUser(id int64) (*User, error) {
+	result, err := u.db.Query("SELECT id, email, password, secret FROM users WHERE id = ?", id)
+	if err != nil {
+		return nil, err
+	}
+	var user User
+	for result.Next() {
+
+		if err := result.Scan(&user.Id, &user.Email, &user.Password, &user.Secret); err != nil {
+			return nil, err
+		}
+	}
+
+	defer result.Close()
+	return &user, nil
 }
